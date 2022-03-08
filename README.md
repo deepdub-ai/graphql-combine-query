@@ -1,22 +1,56 @@
-graphql-combine-query
-=======================
-[![Build Status](https://travis-ci.org/domasx2/graphql-combine-query.svg?branch=master)](https://travis-ci.org/domasx2/graphql-combine-query)
+# @deepdub/graphql-combine-query
 
-This is a util to combine multiple graphql queries or mutations into a single one.
+This [graphql-combine-query](https://github.com/domasx2/graphql-combine-query) fork extends `combinedQuery`, adding a method that allows combining multiple queries, repeating or not, into one.
+
+Previously, this was not possible:
+
+```javascript
+const { document, variables } = (() =>
+  combineQuery("CompositeMutation")
+    .add(createFooMutation, { foo: { name: "A foo" } })
+    .add(updateFooMutation, { foo: { id: "some-id", name: "Another foo" } })
+    .add(createFooMutation, { foo: { name: "Yet another foo" } })
+```
+
+As both createFooMutation would collide (you could use `addN`, but that would re-order the mutations, making it impossible to do the `update` between both `create`s).
+
+With the new `addAssorted` you could write this, instead:
+
+```javascript
+const { document, variables } = (() =>
+  combineQuery("CompositeMutation")
+    .addAssorted([
+      createFooMutation,
+      updateFooMutation,
+      createFooMutation
+    ], [
+      { foo: { name: "A foo" } },
+      { foo: { id: "some-id", name: "Another foo" } },
+      { foo: { name: "Yet another foo" } }
+    ])
+```
+
+## Test
+
+Run
+
+```sh
+ts-node ./test/test.ts
+```
 
 # Why?
 
-* There are situations where you do not know ahead of time what fields will need to be invoked with a mutation, so cannot prepate a single graphql document ahead of time
-* Some graphql servers, like [Hasura](https://hasura.io/) will execute each mutation in a single database transaction, which is desirable for changes being made
-* It just might be easier to deal with state of a single query/mutation compared to making several calls to backend
+- There are situations where you do not know ahead of time what fields will need to be invoked with a mutation, so cannot prepate a single graphql document ahead of time
+- Some graphql servers, like [Hasura](https://hasura.io/) will execute each mutation in a single database transaction, which is desirable for changes being made
+- It just might be easier to deal with state of a single query/mutation compared to making several calls to backend
 
 # Install
 
 ```sh
 npm install graphql-combine-query
 ```
-# Usage / examples
 
+# Usage / examples
 
 ## combine several queries / mutations together
 
@@ -24,30 +58,30 @@ create query builder with `combineQuery(newQueryName)` and use `.add(document, v
 argument list & top level selections are concatenated
 
 ```javascript
-import combineQuery from 'graphql-combine-query'
+import combineQuery from "graphql-combine-query";
 
-import gql from 'graphql-tag'
+import gql from "graphql-tag";
 
 const fooQuery = gql`
   query FooQuery($foo: String!) {
     getFoo(foo: $foo)
   }
-`
+`;
 
 const barQuery = gql`
   query BarQuery($bar: String!) {
     getBar(bar: $bar)
   }
-`
+`;
 
-const { document, variables } = combineQuery('FooBarQuery')
-  .add(fooQuery, { foo: 'some value' })
-  .add(barQuery, { bar: 'another value' })
+const { document, variables } = combineQuery("FooBarQuery")
+  .add(fooQuery, { foo: "some value" })
+  .add(barQuery, { bar: "another value" });
 
-console.log(variables)
+console.log(variables);
 // { foo: 'some value', bar: 'another value' }
 
-print(document)
+print(document);
 /*
 query FooBarQuery($foo: String!, $bar: String!) {
    getFoo(foo: $foo)
@@ -65,9 +99,9 @@ Arguments & top level selections will be renamed/aliased with index appended.
 Let's say we want to create foo and update several bars by id:
 
 ```javascript
-import combineQuery from 'graphql-combine-query'
+import combineQuery from "graphql-combine-query";
 
-import gql from 'graphql-tag'
+import gql from "graphql-tag";
 
 const createFooMutation = gql`
   mutation CreateFoo($foo: foo_input!) {
@@ -75,7 +109,7 @@ const createFooMutation = gql`
       id
     }
   }
-`
+`;
 
 const updateBarMutation = gql`
   mutation UpdateBar($bar_id: Int!, $bar: bar_update_input!) {
@@ -83,17 +117,17 @@ const updateBarMutation = gql`
       id
     }
   }
-`
+`;
 
-const { document, variables } = (() => combineQuery('CompositeMutation')
-  .add(createFooMutation, { foo: { name: 'A foo' }})
-  .addN(updateBarMutation, [
-    { bar_id: 1, bar: { name: 'Some bar' }},
-    { bar_id: 2, bar: { name: 'Another bar' }}
-  ])
-)()
+const { document, variables } = (() =>
+  combineQuery("CompositeMutation")
+    .add(createFooMutation, { foo: { name: "A foo" } })
+    .addN(updateBarMutation, [
+      { bar_id: 1, bar: { name: "Some bar" } },
+      { bar_id: 2, bar: { name: "Another bar" } },
+    ]))();
 
-console.log(variables)
+console.log(variables);
 /*
 {
   foo: { name: 'A foo' },
@@ -105,7 +139,7 @@ console.log(variables)
 
 */
 
-print(document)
+print(document);
 
 /*
 mutation CompositeMutation($foo: foo_input!, $bar_id_0: Int!, $bar_0: bar_update_input!, $bar_id_1: Int!, $bar_1: bar_update_input!) {
@@ -118,6 +152,6 @@ mutation CompositeMutation($foo: foo_input!, $bar_id_0: Int!, $bar_0: bar_update
     updateBar_1: updateBar(where: {id: {_eq: $bar_id_1}}, _set: $bar_1) {
       id
     }
-  } 
+  }
 */
 ```

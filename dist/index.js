@@ -33,8 +33,8 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var utils_1 = require("./utils");
 var emptyDoc = {
-    kind: 'Document',
-    definitions: []
+    kind: "Document",
+    definitions: [],
 };
 var CombinedQueryError = /** @class */ (function (_super) {
     __extends(CombinedQueryError, _super);
@@ -51,9 +51,13 @@ var CombinedQueryBuilderImpl = /** @class */ (function () {
     }
     CombinedQueryBuilderImpl.prototype.add = function (document, variables) {
         var _this = this;
-        var opDefs = this.document.definitions.concat(document.definitions).filter(function (def) { return def.kind === 'OperationDefinition'; });
+        var opDefs = this.document.definitions
+            .concat(document.definitions)
+            .filter(function (def) {
+            return def.kind === "OperationDefinition";
+        });
         if (!opDefs.length) {
-            throw new CombinedQueryError('Expected at least one OperationDefinition, but found none.');
+            throw new CombinedQueryError("Expected at least one OperationDefinition, but found none.");
         }
         // do some basic validation
         opDefs.forEach(function (def) {
@@ -63,15 +67,16 @@ var CombinedQueryBuilderImpl = /** @class */ (function () {
             otherOpDefs.forEach(function (_def) {
                 var _a, _b;
                 if (_def.operation !== def.operation) {
-                    throw new CombinedQueryError("expected all operations to be of the smae type, but " + ((_a = _def.name) === null || _a === void 0 ? void 0 : _a.value) + " is " + _def.operation + " and " + ((_b = def.name) === null || _b === void 0 ? void 0 : _b.value) + " is " + def.operation);
+                    throw new CombinedQueryError("expected all operations to be of the same type, but " + ((_a = _def.name) === null || _a === void 0 ? void 0 : _a.value) + " is " + _def.operation + " and " + ((_b = def.name) === null || _b === void 0 ? void 0 : _b.value) + " is " + def.operation);
                 }
             });
-            // all top level fields mut be unique. doesn't drill down framgents tho. maybe someday
-            (_a = def.selectionSet.selections) === null || _a === void 0 ? void 0 : _a.filter(function (s) { return s.kind === 'Field'; }).forEach(function (sel) {
-                otherOpDefs.forEach(function (_def) { var _a; return (_a = _def.selectionSet.selections) === null || _a === void 0 ? void 0 : _a.filter(function (s) { return s.kind === 'Field'; }).forEach(function (_sel) {
+            // all top level fields mut be unique. doesn't drill down fragments tho. maybe someday
+            (_a = def.selectionSet.selections) === null || _a === void 0 ? void 0 : _a.filter(function (s) { return s.kind === "Field"; }).forEach(function (sel) {
+                otherOpDefs.forEach(function (_def) { var _a; return (_a = _def.selectionSet.selections) === null || _a === void 0 ? void 0 : _a.filter(function (s) { return s.kind === "Field"; }).forEach(function (_sel) {
                     var _a, _b, _c, _d;
-                    if ((((_a = sel.alias) === null || _a === void 0 ? void 0 : _a.value) || sel.name.value) === (((_b = _sel.alias) === null || _b === void 0 ? void 0 : _b.value) || _sel.name.value)) {
-                        throw new CombinedQueryError("duplicate field definition " + _sel.name.value + " for oprations " + ((_c = def.name) === null || _c === void 0 ? void 0 : _c.value) + " and " + ((_d = _def.name) === null || _d === void 0 ? void 0 : _d.value));
+                    if ((((_a = sel.alias) === null || _a === void 0 ? void 0 : _a.value) || sel.name.value) ===
+                        (((_b = _sel.alias) === null || _b === void 0 ? void 0 : _b.value) || _sel.name.value)) {
+                        throw new CombinedQueryError("duplicate field definition " + _sel.name.value + " for operations " + ((_c = def.name) === null || _c === void 0 ? void 0 : _c.value) + " and " + ((_d = _def.name) === null || _d === void 0 ? void 0 : _d.value));
                     }
                 }); });
             });
@@ -80,7 +85,7 @@ var CombinedQueryBuilderImpl = /** @class */ (function () {
                 otherOpDefs.forEach(function (_def) { var _a; return (_a = _def.variableDefinitions) === null || _a === void 0 ? void 0 : _a.forEach(function (_variable) {
                     var _a, _b;
                     if (variable.variable.name.value === _variable.variable.name.value) {
-                        throw new CombinedQueryError("duplicate variable definition " + _variable.variable.name.value + " for oprations " + ((_a = def.name) === null || _a === void 0 ? void 0 : _a.value) + " and " + ((_b = _def.name) === null || _b === void 0 ? void 0 : _b.value));
+                        throw new CombinedQueryError("duplicate variable definition " + _variable.variable.name.value + " for operations " + ((_a = def.name) === null || _a === void 0 ? void 0 : _a.value) + " and " + ((_b = _def.name) === null || _b === void 0 ? void 0 : _b.value));
                     }
                 }); });
             });
@@ -91,25 +96,27 @@ var CombinedQueryBuilderImpl = /** @class */ (function () {
             }
             return (variables || _this.variables);
         })();
-        var definitions = [{
-                kind: 'OperationDefinition',
+        var definitions = [
+            {
+                kind: "OperationDefinition",
                 directives: opDefs.flatMap(function (def) { return def.directives || []; }),
-                name: { kind: 'Name', value: this.operationName },
+                name: { kind: "Name", value: this.operationName },
                 operation: opDefs[0].operation,
                 selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: opDefs.flatMap(function (def) { return def.selectionSet.selections; })
+                    kind: "SelectionSet",
+                    selections: opDefs.flatMap(function (def) { return def.selectionSet.selections; }),
                 },
-                variableDefinitions: opDefs.flatMap(function (def) { return def.variableDefinitions || []; })
-            }];
+                variableDefinitions: opDefs.flatMap(function (def) { return def.variableDefinitions || []; }),
+            },
+        ];
         var encounteredFragmentList = new Set();
         var combinedDocumentDefinitions = this.document.definitions.concat(document.definitions);
         for (var _i = 0, combinedDocumentDefinitions_1 = combinedDocumentDefinitions; _i < combinedDocumentDefinitions_1.length; _i++) {
             var definition = combinedDocumentDefinitions_1[_i];
-            if (definition.kind === 'OperationDefinition') {
+            if (definition.kind === "OperationDefinition") {
                 continue;
             }
-            if (definition.kind === 'FragmentDefinition') {
+            if (definition.kind === "FragmentDefinition") {
                 if (encounteredFragmentList.has(definition.name.value)) {
                     continue;
                 }
@@ -118,8 +125,8 @@ var CombinedQueryBuilderImpl = /** @class */ (function () {
             definitions = __spreadArrays([definition], definitions);
         }
         var newDoc = {
-            kind: 'Document',
-            definitions: definitions
+            kind: "Document",
+            definitions: definitions,
         };
         return new CombinedQueryBuilderImpl(this.operationName, newDoc, newVars);
     };
@@ -131,7 +138,24 @@ var CombinedQueryBuilderImpl = /** @class */ (function () {
         }
         return variables.reduce(function (builder, _variables, idx) {
             var doc = utils_1.renameVariablesAndTopLevelFields(document, function (name) { return variableRenameFn(name, idx); }, function (name) { return fieldRenameFn(name, idx); });
-            var vars = utils_1.renameVariables(_variables, function (name) { return variableRenameFn(name, idx); });
+            var vars = utils_1.renameVariables(_variables, function (name) {
+                return variableRenameFn(name, idx);
+            });
+            return builder.add(doc, vars);
+        }, this);
+    };
+    CombinedQueryBuilderImpl.prototype.addAssorted = function (documents, variables, variableRenameFn, fieldRenameFn) {
+        if (variableRenameFn === void 0) { variableRenameFn = utils_1.defaultRenameFn; }
+        if (fieldRenameFn === void 0) { fieldRenameFn = utils_1.defaultRenameFn; }
+        if (!variables.length) {
+            return this;
+        }
+        return variables.reduce(function (builder, _variables, idx) {
+            var document = documents[idx];
+            var doc = utils_1.renameVariablesAndTopLevelFields(document, function (name) { return variableRenameFn(name, idx); }, function (name) { return fieldRenameFn(name, idx); });
+            var vars = utils_1.renameVariables(_variables, function (name) {
+                return variableRenameFn(name, idx);
+            });
             return builder.add(doc, vars);
         }, this);
     };
@@ -145,7 +169,10 @@ function combinedQuery(operationName) {
         },
         addN: function (document, variables, variableRenameFn, fieldRenameFn) {
             return new CombinedQueryBuilderImpl(this.operationName, emptyDoc).addN(document, variables, variableRenameFn, fieldRenameFn);
-        }
+        },
+        addAssorted: function (documents, variables, variableRenameFn, fieldRenameFn) {
+            return new CombinedQueryBuilderImpl(this.operationName, emptyDoc).addAssorted(documents, variables, variableRenameFn, fieldRenameFn);
+        },
     };
 }
 exports.default = combinedQuery;

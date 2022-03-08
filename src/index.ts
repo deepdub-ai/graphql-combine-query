@@ -31,6 +31,12 @@ export interface NewCombinedQueryBuilder {
     variableRenameFn?: RenameFnWithIndex,
     fieldRenameFn?: RenameFnWithIndex
   ) => CombinedQueryBuilder<{}, {}>;
+  addAssorted: <TVariables = OperationVariables>(
+    document: DocumentNode[],
+    variables: TVariables[],
+    variableRenameFn?: RenameFnWithIndex,
+    fieldRenameFn?: RenameFnWithIndex
+  ) => CombinedQueryBuilder<{}, {}>;
 }
 
 export interface CombinedQueryBuilder<
@@ -45,6 +51,12 @@ export interface CombinedQueryBuilder<
   ) => CombinedQueryBuilder<TData & TDataAdd, TVariables & TVariablesAdd>;
   addN: <TVariablesAdd = OperationVariables>(
     document: DocumentNode,
+    variables: TVariablesAdd[],
+    variableRenameFn?: RenameFnWithIndex,
+    fieldRenameFn?: RenameFnWithIndex
+  ) => CombinedQueryBuilder<TData, TVariables>;
+  addAssorted: <TVariablesAdd = OperationVariables>(
+    document: DocumentNode[],
     variables: TVariablesAdd[],
     variableRenameFn?: RenameFnWithIndex,
     fieldRenameFn?: RenameFnWithIndex
@@ -203,15 +215,43 @@ class CombinedQueryBuilderImpl<TData = any, TVariables = OperationVariables>
         _variables,
         idx
       ): CombinedQueryBuilder<unknown, TVariables & OperationVariables> => {
-        console.log(print(document));
-        console.log("-------------------");
         const doc = renameVariablesAndTopLevelFields(
           document,
           (name) => variableRenameFn(name, idx),
           (name) => fieldRenameFn(name, idx)
         );
-        console.log(print(doc));
-        console.log("-------------------");
+        const vars = renameVariables(_variables, (name) =>
+          variableRenameFn(name, idx)
+        );
+        return builder.add(doc, vars as any);
+      },
+      this
+    );
+  }
+
+  addAssorted<TVariablesAdd = OperationVariables>(
+    documents: DocumentNode[],
+    variables: TVariablesAdd[],
+    variableRenameFn: RenameFnWithIndex = defaultRenameFn,
+    fieldRenameFn: RenameFnWithIndex = defaultRenameFn
+  ): CombinedQueryBuilder<TData, TVariables> {
+    if (!variables.length) {
+      return this;
+    }
+    return variables.reduce<
+      CombinedQueryBuilder<unknown, TVariables & OperationVariables>
+    >(
+      (
+        builder,
+        _variables,
+        idx
+      ): CombinedQueryBuilder<unknown, TVariables & OperationVariables> => {
+        const document = documents[idx];
+        const doc = renameVariablesAndTopLevelFields(
+          document,
+          (name) => variableRenameFn(name, idx),
+          (name) => fieldRenameFn(name, idx)
+        );
         const vars = renameVariables(_variables, (name) =>
           variableRenameFn(name, idx)
         );
@@ -247,6 +287,22 @@ export default function combinedQuery(
         this.operationName,
         emptyDoc
       ).addN<TVariables>(document, variables, variableRenameFn, fieldRenameFn);
+    },
+    addAssorted<TVariables = OperationVariables>(
+      documents: DocumentNode[],
+      variables: TVariables[],
+      variableRenameFn?: RenameFnWithIndex,
+      fieldRenameFn?: RenameFnWithIndex
+    ): CombinedQueryBuilder<{}, {}> {
+      return new CombinedQueryBuilderImpl<{}, {}>(
+        this.operationName,
+        emptyDoc
+      ).addAssorted<TVariables>(
+        documents,
+        variables,
+        variableRenameFn,
+        fieldRenameFn
+      );
     },
   };
 }
