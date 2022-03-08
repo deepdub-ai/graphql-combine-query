@@ -12,7 +12,7 @@ const { document, variables } = (() =>
     .add(createFooMutation, { foo: { name: "Yet another foo" } })
 ```
 
-As both createFooMutation would collide (you could use `addN`, but that would re-order the mutations, making it impossible to do the `update` between both `create`s).
+As both `createFooMutation` would collide (you could use `addN`, but that would re-order the mutations, making it impossible to do the `update` between both `create`'s).
 
 With the new `addAssorted` you could write this, instead:
 
